@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: omics_demo
+      POSTGRES_USER: omics
+      POSTGRES_PASSWORD: omics
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U omics -d omics_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://omics:omics@postgres:5432/omics_demo
+      DATA_DIR: /data/h5ad
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:8080
+      PYTHONPATH: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ingest:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://omics:omics@postgres:5432/omics_demo
+      DATA_DIR: /data/h5ad
+      PYTHONPATH: /app
+    command: >
+      sh -c "python scripts/create_demo_data.py &&
+             python scripts/ingest_h5ad.py /data/h5ad"
+    volumes:
+      - ./data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

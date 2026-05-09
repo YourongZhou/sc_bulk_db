@@ -1,0 +1,21 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+dist/
+
+# Local biological data outputs. These are too large for normal GitHub repos
+# and should be regenerated from manifests/download scripts or stored via LFS/object storage.
+data/raw/
+data/processed/
+data/backups/
+data/h5ad/*.h5ad
+data/manifests/*_test.csv
+data/manifests/*_report_test.csv
+
+# Local database/runtime state.
+*.db
+*.sqlite
+*.sqlite3
+
