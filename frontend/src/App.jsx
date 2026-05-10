@@ -395,8 +395,14 @@ function TagList({ tags, accent = "soft" }) {
 
 function Layout({ children }) {
   const location = useLocation();
+  const isHome = location.pathname === "/";
+  const isSingleCell = location.pathname.startsWith("/single-cell");
+
   return (
     <div className="shell">
+      <a className="skip-link" href="#main-content">
+        跳到主要内容
+      </a>
       <aside className="sidebar">
         <div className="sidebar-panel">
           <p className="eyebrow">数据库总览</p>
@@ -404,10 +410,10 @@ function Layout({ children }) {
           <p>以样本为中心管理 FASTQ、RNA-seq 和 bulk 资产，并跟踪四类人群分组的配额覆盖情况。</p>
         </div>
         <nav>
-          <Link className={location.pathname === "/" ? "active" : ""} to="/">
+          <Link aria-current={isHome ? "page" : undefined} className={isHome ? "active" : ""} to="/">
             数据库总览
           </Link>
-          <Link className={location.pathname.startsWith("/single-cell") ? "active" : ""} to="/single-cell">
+          <Link aria-current={isSingleCell ? "page" : undefined} className={isSingleCell ? "active" : ""} to="/single-cell">
             RNA-seq 检索
           </Link>
           <a href="/combined-umaps.html">汇总 UMAP</a>
@@ -417,7 +423,7 @@ function Layout({ children }) {
           <p>样本是核心实体。文件按样本资产进行跟踪，而行级索引目前只存在于 RNA-seq 的 h5ad 数据中。</p>
         </div>
       </aside>
-      <main className="content">
+      <main className="content" id="main-content" tabIndex={-1}>
         <div className="content-inner">{children}</div>
       </main>
     </div>
@@ -1004,7 +1010,9 @@ function SingleCellQuery() {
           <span>
             已从 <strong>{selected[0].sample_code}</strong> 选择 {selected.length} 行
           </span>
-          <button onClick={loadPreview}>预览数据</button>
+          <button onClick={loadPreview} type="button">
+            预览数据
+          </button>
         </div>
       ) : null}
 
@@ -1042,7 +1050,12 @@ function SingleCellQuery() {
                   return (
                     <tr key={`${row.asset_id}:${row.obs_index}`}>
                       <td>
-                        <input type="checkbox" checked={checked} onChange={() => toggleSelection(row)} />
+                        <input
+                          aria-label={`选择 ${row.sample_code} 的第 ${row.obs_index} 行`}
+                          checked={checked}
+                          onChange={() => toggleSelection(row)}
+                          type="checkbox"
+                        />
                       </td>
                       <td>{row.sample_code}</td>
                       <td>{GROUP_NAME_FALLBACKS[row.group_code] || row.group_code}</td>
