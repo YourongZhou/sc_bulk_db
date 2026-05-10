@@ -39,8 +39,7 @@ services:
       DATA_DIR: /data/h5ad
       PYTHONPATH: /app
     command: >
-      sh -c "python scripts/create_demo_data.py &&
-             python scripts/ingest_h5ad.py /data/h5ad"
+      sh -c "python scripts/admin/load_target_inventory.py"
     volumes:
       - ./data:/data
     depends_on:

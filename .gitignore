@@ -10,6 +10,8 @@ dist/
 data/raw/
 data/processed/
 data/backups/
+data/generated/
+data/single_cell/
 data/h5ad/*.h5ad
 data/manifests/*_test.csv
 data/manifests/*_report_test.csv
@@ -18,4 +20,3 @@ data/manifests/*_report_test.csv
 *.db
 *.sqlite
 *.sqlite3
-

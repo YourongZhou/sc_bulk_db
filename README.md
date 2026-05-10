@@ -14,6 +14,22 @@ Prototype web demo for browsing multi-omics datasets, filtering by metadata, que
 docker compose up --build
 ```
 
+## Local Conda Setup
+
+For a local Python environment that avoids the `scanpy` / `numba` / `numpy` incompatibility seen with
+`numpy>=2`, create the checked-in conda environment:
+
+```bash
+mamba env create -f backend/environment.sc_bulk_db_mamba.yml
+```
+
+Useful local commands:
+
+```bash
+mamba run -n sc_bulk_db_mamba python backend/scripts/preprocess/preprocess_geo_bulk.py --output-dir data/h5ad
+cd backend && mamba run -n sc_bulk_db_mamba python -m scripts.ingest_h5ad ../data/h5ad/GSE198533.h5ad
+```
+
 Services:
 
 - Frontend: `http://localhost:8080`

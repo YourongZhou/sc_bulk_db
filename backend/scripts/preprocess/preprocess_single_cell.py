@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+import anndata as ad
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -21,13 +22,42 @@ def normalize_obs(adata, dataset_id: str) -> list[str]:
     notes: list[str] = []
 
     source_map = {
-        "sample_id": ["sample_id", "sample", "donor_id", "author_sample_id", "batch", "library_id"],
-        "cell_type": ["cell_type", "cell_type_alias", "celltype", "annotation", "cell_type_ontology_term_id"],
-        "cluster": ["cluster", "leiden", "louvain", "seurat_clusters"],
-        "disease": ["disease", "disease_ontology_term_id"],
+        "sample_id": [
+            "sample_id",
+            "sample",
+            "donor_id",
+            "author_sample_id",
+            "scRNASeq_sample_ID",
+            "batch",
+            "library_id",
+        ],
+        "cell_type": [
+            "cell_type",
+            "cell_type_alias",
+            "celltype",
+            "annotation",
+            "label_l1",
+            "cell_type_ontology_term_id",
+        ],
+        "cluster": ["cluster", "leiden", "louvain", "seurat_clusters", "label_l1", "cell_type"],
+        "disease": ["disease", "Source", "batch", "disease_ontology_term_id"],
         "tissue": ["tissue", "tissue_general", "tissue_ontology_term_id"],
-        "condition": ["condition", "disease", "development_stage", "sex"],
+        "condition": ["condition", "Source", "batch", "time", "disease", "development_stage", "sex"],
     }
+
+    if dataset_id.startswith("pbmc_atlas_1_"):
+        source_map["cell_type"] = [
+            "minor_subset",
+            "oldminor",
+            "subtype",
+            "cell_type",
+            "cell_type_alias",
+            "celltype",
+            "annotation",
+            "label_l1",
+            "cell_type_ontology_term_id",
+        ]
+        notes.append("cell_type candidates prioritized for atlas1")
 
     for required, candidates in source_map.items():
         source = first_existing(obs, candidates)
@@ -54,6 +84,59 @@ def normalize_obs(adata, dataset_id: str) -> list[str]:
     return notes
 
 
+def dataset_id_for(source_path: Path, raw_dir: Path) -> str:
+    relative = source_path.relative_to(raw_dir)
+    parts = list(relative.parts[:-1]) + [relative.stem]
+    return "__".join(part.replace(" ", "_") for part in parts)
+
+
+def infer_subset_label(obs: pd.DataFrame) -> str:
+    labels = []
+    for column in ["batch", "time", "condition", "sample_id"]:
+        if column not in obs.columns:
+            continue
+        values = obs[column].dropna().astype(str).unique().tolist()
+        if len(values) == 1:
+            labels.append(f"{column}={values[0]}")
+    return ", ".join(labels)
+
+
+def has_negative_values(matrix) -> bool:
+    matrix_min = matrix.min()
+    if hasattr(matrix_min, "item"):
+        matrix_min = matrix_min.item()
+    return float(matrix_min) < 0
+
+
+def compute_scanpy_umap(adata) -> str:
+    work = adata.copy()
+    preprocess_mode = "normalized_log1p"
+    if has_negative_values(work.X):
+        preprocess_mode = "existing_matrix_negative_values"
+    else:
+        sc.pp.normalize_total(work, target_sum=1e4)
+        sc.pp.log1p(work)
+
+    if work.n_vars > 50:
+        n_top_genes = min(2_000, work.n_vars)
+        sc.pp.highly_variable_genes(work, n_top_genes=n_top_genes, subset=True)
+
+    if work.n_obs < 3 or work.n_vars < 2:
+        adata.obsm["X_umap"] = np.zeros((adata.n_obs, 2), dtype=np.float32)
+        return f"zeros_after_scanpy_prep_{preprocess_mode}"
+
+    n_comps = min(50, work.n_obs - 1, work.n_vars - 1)
+    if n_comps < 2:
+        adata.obsm["X_umap"] = np.zeros((adata.n_obs, 2), dtype=np.float32)
+        return f"zeros_after_scanpy_pca_limits_{preprocess_mode}"
+
+    sc.pp.pca(work, n_comps=n_comps, svd_solver="arpack")
+    sc.pp.neighbors(work, n_pcs=min(30, n_comps))
+    sc.tl.umap(work, random_state=0)
+    adata.obsm["X_umap"] = np.asarray(work.obsm["X_umap"], dtype=np.float32)
+    return f"computed_scanpy_{preprocess_mode}"
+
+
 def ensure_umap(adata, max_cells_for_umap: int) -> str:
     if "X_umap" in adata.obsm and adata.obsm["X_umap"].shape[1] >= 2:
         return "existing"
@@ -67,44 +150,49 @@ def ensure_umap(adata, max_cells_for_umap: int) -> str:
         rng = np.random.default_rng(abs(hash("umap:" + str(adata.n_obs))) % (2**32))
         adata.obsm["X_umap"] = rng.normal(size=(adata.n_obs, 2)).astype(np.float32)
         return "random_fallback_large_dataset"
-
-    work = adata.copy()
     try:
-        if work.n_vars > 2_000:
-            sc.pp.highly_variable_genes(work, n_top_genes=2_000, flavor="cell_ranger", subset=True)
-        sc.pp.normalize_total(work, target_sum=1e4)
-        sc.pp.log1p(work)
-        sc.pp.pca(work, n_comps=min(50, work.n_obs - 1, work.n_vars - 1))
-        sc.pp.neighbors(work, n_neighbors=min(15, max(2, work.n_obs - 1)))
-        sc.tl.umap(work)
-        adata.obsm["X_umap"] = np.asarray(work.obsm["X_umap"], dtype=np.float32)
-        return "computed_scanpy"
-    except Exception:
+        return compute_scanpy_umap(adata)
+    except Exception as exc:
         if "X_pca" in adata.obsm and adata.obsm["X_pca"].shape[1] >= 2:
             adata.obsm["X_umap"] = np.asarray(adata.obsm["X_pca"][:, :2], dtype=np.float32)
-            return "pca_fallback_after_error"
+            return f"pca_fallback_after_scanpy_error:{type(exc).__name__}"
         rng = np.random.default_rng(abs(hash("umap-fallback:" + str(adata.n_obs))) % (2**32))
         adata.obsm["X_umap"] = rng.normal(size=(adata.n_obs, 2)).astype(np.float32)
-        return "random_fallback_after_error"
+        return f"random_fallback_after_scanpy_error:{type(exc).__name__}"
 
 
-def dataset_metadata(adata, dataset_id: str, source_path: Path) -> dict[str, str]:
+def dataset_metadata(adata, dataset_id: str, source_path: Path, raw_dir: Path) -> dict[str, str]:
     existing = dict(adata.uns.get("dataset_metadata", {}))
+    relative_parent = source_path.relative_to(raw_dir).parent
+    collection_name = relative_parent.name if relative_parent != Path(".") else source_path.parent.name
+    collection_title = collection_name.replace("_", " ").replace("-", " ").title()
+    subset_label = infer_subset_label(adata.obs)
+    title = existing.get("title", "")
+    if not title or title == source_path.stem:
+        title = collection_title if not subset_label else f"{collection_title} ({subset_label})"
+    description = existing.get("description", "")
+    if not description:
+        description = f"Single-cell H5AD processed from {source_path.name}"
+    if subset_label and subset_label not in description:
+        description = f"{description}. Subset: {subset_label}"
+    existing_dataset_id = existing.get("dataset_id", "")
+    resolved_dataset_id = dataset_id if not existing_dataset_id or existing_dataset_id == source_path.stem else existing_dataset_id
     return {
-        "dataset_id": existing.get("dataset_id", dataset_id),
-        "title": existing.get("title", dataset_id.replace("_", " ").title()),
-        "description": existing.get("description", f"CELLxGENE source H5AD processed from {source_path.name}"),
+        "dataset_id": resolved_dataset_id,
+        "title": title,
+        "description": description,
         "omics_type": existing.get("omics_type", "scRNA-seq"),
         "species": existing.get("species", "human"),
     }
 
 
-def preprocess_file(source_path: Path, output_dir: Path, max_cells_for_umap: int) -> dict:
-    dataset_id = source_path.stem
-    adata = sc.read_h5ad(source_path)
+def preprocess_file(source_path: Path, raw_dir: Path, output_dir: Path, max_cells_for_umap: int) -> dict:
+    dataset_id = dataset_id_for(source_path, raw_dir)
+    adata = ad.read_h5ad(source_path)
+    adata.var_names_make_unique()
     notes = normalize_obs(adata, dataset_id)
     umap_status = ensure_umap(adata, max_cells_for_umap)
-    adata.uns["dataset_metadata"] = dataset_metadata(adata, dataset_id, source_path)
+    adata.uns["dataset_metadata"] = dataset_metadata(adata, dataset_id, source_path, raw_dir)
     adata.uns["preprocessing_notes"] = notes + [f"umap_status={umap_status}"]
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -129,7 +217,7 @@ def selected_paths(manifest_path: Path | None, raw_dir: Path) -> list[Path]:
         if "downloaded" in rows.columns:
             rows = rows[rows["downloaded"].astype(bool)]
         return [Path(path) for path in rows["local_path"].dropna().astype(str)]
-    return sorted(raw_dir.glob("*.h5ad"))
+    return sorted(path for path in raw_dir.rglob("*.h5ad") if path.is_file())
 
 
 def update_manifest(manifest_path: Path, records: list[dict]) -> None:
@@ -163,11 +251,11 @@ def main() -> None:
     records = []
     for path in selected_paths(args.manifest, args.raw_dir):
         try:
-            records.append(preprocess_file(path, args.output_dir, args.max_cells_for_umap))
+            records.append(preprocess_file(path, args.raw_dir, args.output_dir, args.max_cells_for_umap))
         except Exception as exc:
             records.append(
                 {
-                    "dataset_id": path.stem,
+                    "dataset_id": dataset_id_for(path, args.raw_dir),
                     "source_path": str(path),
                     "processed_path": "",
                     "n_obs": 0,
