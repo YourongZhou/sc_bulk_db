@@ -152,33 +152,51 @@ flowchart TD
 ## 4. 系统与外部实体交互图
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables': {'fontFamily':'PingFang SC, Microsoft YaHei, sans-serif','primaryColor':'#F8FBFA','primaryTextColor':'#18322D','primaryBorderColor':'#1F6B5D','lineColor':'#4A7068','secondaryColor':'#E8F4F0','tertiaryColor':'#FFF8E8'}, 'flowchart': {'curve':'basis','htmlLabels': true}} }%%
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: ''
+    primaryColor: '#F8FBFA'
+    primaryTextColor: '#18322D'
+    primaryBorderColor: '#1F6B5D'
+    lineColor: '#4A7068'
+    secondaryColor: '#E8F4F0'
+    tertiaryColor: '#FFF8E8'
+  flowchart:
+    curve: basis
+    htmlLabels: true
+  layout: fixed
+---
 flowchart LR
-    U1["研究人员<br/>浏览器用户"]
-    U2["数据管理员<br/>运维 / 数据处理人员"]
-    E1["公共数据源<br/>CELLxGENE / GEO / SRA / recount3"]
-    E2["本地文件系统<br/>data/raw / data/manifests / data/processed / data/h5ad"]
+    E2["外部实体 E2<br>数据管理员"] -- 触发脚本 / 选择 manifest --> P1["处理 P1<br>下载与预处理"]
+    P1 -- 预处理结果 --> D1[("数据存储 D1<br>Manifest / Raw / Processed 文件")]
+    D1 -- 处理后 h5ad / CSV / FASTQ 路径 --> P2["处理 P2<br>h5ad 入库与资产注册"]
+    P2 -- 样本、资产、细胞索引 --> D2[("数据存储 D2<br>PostgreSQL 元数据与索引")]
+    P2 -- 标准化 h5ad --> D3[("数据存储 D3<br>不可变 .h5ad 文件")]
+    E1["外部实体 E1<br>研究人员"] -- 浏览 / 筛选 / 检索请求 --> P3["处理 P3<br>API 查询服务"]
+    P3 -- 样本目录 / 详情 / 配额 / 索引行 --> E1
+    P3 -- 结构化查询 --> D2
+    D2 -- 元数据 / asset_id / obs_index --> P3
+    P3 -- 细胞预览 / 嵌入读取请求 --> P4["处理 P4<br>h5ad 细胞矩阵 / 嵌入读取"]
+    P4 -- 文件路径 / sample_id / asset_id --> D2
+    D2 -- <br> --> P4
+    P4 -- 读取矩阵 / embedding --> D3
+    D3 -- 基因 / 表达矩阵 / 坐标 --> P4
+    P4 -- 预览数据 / 嵌入点 --> P3
 
-    SYS["多组学仓库系统<br/>前端 + FastAPI + PostgreSQL + 入库脚本"]
-
-    U1 -- 浏览 / 筛选 / 详情 / 下载 / 检索 / 预览 --> SYS
-    SYS -- HTML / JSON / 文件下载 --> U1
-
-    U2 -- 启动容器 / 执行脚本 / 重置入库 / 重命名样本 --> SYS
-    SYS -- 装载结果 / 配额状态 / API 文档 --> U2
-
-    E1 -- 原始数据与元数据 --> SYS
-    SYS -- 下载脚本访问 --> E1
-
-    E2 -- 读写 manifest / 原始文件 / 处理后 h5ad --> SYS
-    SYS -- 生成索引 / 资产记录 / 备份文件 --> E2
-
-    classDef actor fill:#FFF3D9,stroke:#C98B1D,color:#5E420C,stroke-width:1.4px;
-    classDef entity fill:#EEF3FF,stroke:#3F63A8,color:#1E2D52,stroke-width:1.4px;
-    classDef system fill:#EAF7F2,stroke:#2B7A68,color:#17322D,stroke-width:1.8px;
-    class U1,U2 actor;
-    class E1,E2 entity;
-    class SYS system;
+     E2:::ext
+     P1:::proc
+     D1:::store
+     P2:::proc
+     D2:::store
+     D3:::store
+     E1:::ext
+     P3:::proc
+     P4:::proc
+    classDef ext fill:#FFF3D9,stroke:#C98B1D,color:#5E420C,stroke-width:1.4px
+    classDef proc fill:#EAF7F2,stroke:#2B7A68,color:#17322D,stroke-width:1.4px
+    classDef store fill:#EEF3FF,stroke:#3F63A8,color:#1E2D52,stroke-width:1.4px
 ```
 
 ## 5. 架构设计包图
