@@ -1,0 +1,25 @@
+project,project_home,project_type,notes
+SRP688390,data_sources/sra,data_sources,pediatric sepsis PBMC bulk RNA-seq
+SRP692097,data_sources/sra,data_sources,pediatric dengue PBMC bulk transcriptomics
+SRP691746,data_sources/sra,data_sources,PBMC senescence and hepatocellular carcinoma
+ERP187666,data_sources/sra,data_sources,atopic dermatitis PBMC bulk RNA-seq
+SRP449733,data_sources/sra,data_sources,PCOS depression PBMC RNA-seq
+SRP673998,data_sources/sra,data_sources,PBMC differentiation
+SRP672891,data_sources/sra,data_sources,HIV PBMC transcriptional landscape
+ERP187665,data_sources/sra,data_sources,rheumatoid arthritis PBMC before tofacitinib
+SRP663619,data_sources/sra,data_sources,PBMC immunomodulatory response
+SRP655816,data_sources/sra,data_sources,severe cutaneous adverse reaction PBMCs
+SRP653846,data_sources/sra,data_sources,CLL autologous PBMC culture bulk RNA-seq
+SRP652843,data_sources/sra,data_sources,people living with HIV PBMC bulk RNA-seq
+SRP652095,data_sources/sra,data_sources,generic PBMC RNA-seq
+SRP650028,data_sources/sra,data_sources,hepatocellular carcinoma PBMC biomarker study
+SRP628961,data_sources/sra,data_sources,linezolid neuropathy PBMC RNA-seq
+SRP627257,data_sources/sra,data_sources,Sjogren syndrome PBMC bulk RNA-seq
+SRP625988,data_sources/sra,data_sources,astronaut PBMC aging
+SRP621917,data_sources/sra,data_sources,myasthenia gravis PBMC RNA-seq
+SRP621915,data_sources/sra,data_sources,Sjogren and rheumatoid arthritis PBMC RNA-seq
+SRP621873,data_sources/sra,data_sources,ischemic stroke PBMC RNA-seq
+SRP620943,data_sources/sra,data_sources,coronary artery disease PBMC RNA-seq
+SRP620097,data_sources/sra,data_sources,major depressive disorder PBMC RNA-seq
+SRP608135,data_sources/sra,data_sources,STING signaling in PBMCs
+SRP620507,data_sources/sra,data_sources,mononuclear cell aging study lower confidence include

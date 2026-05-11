@@ -163,13 +163,15 @@ DATASETS = [
 ]
 
 
-def build_dataset(output_dir: Path, spec: dict) -> None:
-    file_path = output_dir / f"{spec['dataset_id']}.h5ad"
+def build_sample_file(output_dir: Path, spec: dict, sample_id: str, sample_index: int) -> None:
+    file_path = output_dir / f"{spec['dataset_id']}__{sample_id}.h5ad"
     if file_path.exists():
         return
 
-    rng = np.random.default_rng(abs(hash(spec["dataset_id"])) % (2**32))
-    n_obs = spec.get("n_obs", 24)
+    seed = abs(hash(f"{spec['dataset_id']}::{sample_id}")) % (2**32)
+    rng = np.random.default_rng(seed)
+    sample_count = max(len(spec["samples"]), 1)
+    n_obs = max(spec.get("n_obs", 24) // sample_count, 12)
     n_vars = spec.get("n_vars", 8)
 
     base_lambda = 1.8 if spec["omics_type"] in {"scRNA-seq", "spatial"} else 1.2
@@ -177,12 +179,12 @@ def build_dataset(output_dir: Path, spec: dict) -> None:
     X += rng.normal(0, 0.2, size=(n_obs, n_vars))
     X = np.clip(X, a_min=0, a_max=None)
 
-    sample_ids = [spec["samples"][i % len(spec["samples"])] for i in range(n_obs)]
+    sample_ids = [sample_id] * n_obs
     cell_types = [spec["cell_types"][i % len(spec["cell_types"])] for i in range(n_obs)]
-    conditions = [spec["condition"]] * n_obs
-    if spec["condition"] == "post-treatment" and len(spec["samples"]) >= 3:
-        conditions = ["responder", "responder", "non-responder"] * (n_obs // 3) + ["responder"] * (n_obs % 3)
-        conditions = conditions[:n_obs]
+    condition_value = spec["condition"]
+    if spec["condition"] == "post-treatment":
+        condition_value = "responder" if sample_index < max(sample_count - 1, 1) else "non-responder"
+    conditions = [condition_value] * n_obs
 
     obs = pd.DataFrame(
         {
@@ -194,7 +196,7 @@ def build_dataset(output_dir: Path, spec: dict) -> None:
             "condition": conditions,
         }
     )
-    obs.index = [f"{spec['dataset_id']}_row_{i}" for i in range(n_obs)]
+    obs.index = [f"{sample_id}_row_{i}" for i in range(n_obs)]
 
     feature_prefix = {
         "scRNA-seq": "GENE",
@@ -207,15 +209,20 @@ def build_dataset(output_dir: Path, spec: dict) -> None:
 
     adata = ad.AnnData(X=X, obs=obs, var=var)
     adata.uns["dataset_metadata"] = {
-        "dataset_id": spec["dataset_id"],
+        "dataset_id": f"{spec['dataset_id']}__{sample_id}",
         "title": spec["title"],
         "description": spec["description"],
-        "omics_type": spec["omics_type"],
         "species": spec["species"],
     }
+    adata.uns["sample_metadata"] = {
+        "sample_id": sample_id,
+        "sample_code": sample_id,
+        "title": f"{spec['title']} · {sample_id}",
+        "description": spec["description"],
+        "group_code": "plain_low_altitude",
+    }
 
-    if spec["omics_type"] in {"scRNA-seq", "spatial"}:
-        adata.obsm["X_umap"] = rng.normal(size=(n_obs, 2))
+    adata.obsm["X_umap"] = rng.normal(size=(n_obs, 2))
 
     adata.write_h5ad(file_path)
 
@@ -224,7 +231,10 @@ def main() -> None:
     output_dir = Path("/data/h5ad")
     output_dir.mkdir(parents=True, exist_ok=True)
     for spec in DATASETS:
-        build_dataset(output_dir, spec)
+        if spec["omics_type"] != "scRNA-seq":
+            continue
+        for sample_index, sample_id in enumerate(spec["samples"]):
+            build_sample_file(output_dir, spec, sample_id, sample_index)
 
 
 if __name__ == "__main__":

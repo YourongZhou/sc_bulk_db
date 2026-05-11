@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import delete
 
 from app.database import SessionLocal, init_db
-from app.models import Cell, Dataset, Sample
+from app.models import Sample, SampleDataAsset, SingleCellCell
 from scripts.ingest_h5ad import ingest_file
 
 
@@ -27,9 +27,9 @@ def clear_database() -> None:
     init_db()
     session = SessionLocal()
     try:
-        session.execute(delete(Cell))
+        session.execute(delete(SingleCellCell))
+        session.execute(delete(SampleDataAsset))
         session.execute(delete(Sample))
-        session.execute(delete(Dataset))
         session.commit()
     except Exception:
         session.rollback()

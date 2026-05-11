@@ -1,0 +1,16 @@
+name: sc_bulk_db_mamba
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy=1.26.4
+  - pandas=2.3.3
+  - scanpy=1.11.4
+  - anndata=0.12.2
+  - fastapi=0.116.1
+  - sqlalchemy=2.0.43
+  - psycopg=3.2.9
+  - pydantic=2.11.7
+  - pydantic-settings=2.10.1
+  - uvicorn=0.35.0
+  - pip

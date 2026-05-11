@@ -1,0 +1,9 @@
+local_path,selected,downloaded,preprocessed,ingested,sample_id,time,source_file,error,processed_path
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_1.h5ad,True,True,True,False,P1,0,data_1.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_1.h5ad
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_4.h5ad,True,True,True,False,P2,0,data_4.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_4.h5ad
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_7.h5ad,True,True,True,False,P3,0,data_7.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_7.h5ad
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_10.h5ad,True,True,True,False,P4,0,data_10.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_10.h5ad
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_13.h5ad,True,True,True,False,P5,0,data_13.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_13.h5ad
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_16.h5ad,True,True,True,False,P6,0,data_16.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_16.h5ad
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_19.h5ad,True,True,True,False,P7,0,data_19.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_19.h5ad
+data/raw/single_cell/pbmc_atlas_6_time0_one_per_sample/data_22.h5ad,True,True,True,False,P8,0,data_22.h5ad,,data/single_cell/processed_pbmc_atlas_6_time0/pbmc_atlas_6_time0_one_per_sample__data_22.h5ad

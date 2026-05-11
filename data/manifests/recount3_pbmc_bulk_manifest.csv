@@ -1,0 +1,25 @@
+"project","project_home","project_type","local_dir","selected","downloaded","preprocessed","ingested","notes","error"
+"SRP688390","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP688390",TRUE,FALSE,FALSE,FALSE,"pediatric sepsis PBMC bulk RNA-seq",NA
+"SRP692097","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP692097",TRUE,FALSE,FALSE,FALSE,"pediatric dengue PBMC bulk transcriptomics",NA
+"SRP691746","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP691746",TRUE,FALSE,FALSE,FALSE,"PBMC senescence and hepatocellular carcinoma",NA
+"ERP187666","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/ERP187666",TRUE,FALSE,FALSE,FALSE,"atopic dermatitis PBMC bulk RNA-seq",NA
+"SRP449733","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP449733",TRUE,FALSE,FALSE,FALSE,"PCOS depression PBMC RNA-seq",NA
+"SRP673998","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP673998",TRUE,FALSE,FALSE,FALSE,"PBMC differentiation",NA
+"SRP672891","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP672891",TRUE,FALSE,FALSE,FALSE,"HIV PBMC transcriptional landscape",NA
+"ERP187665","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/ERP187665",TRUE,FALSE,FALSE,FALSE,"rheumatoid arthritis PBMC before tofacitinib",NA
+"SRP663619","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP663619",TRUE,FALSE,FALSE,FALSE,"PBMC immunomodulatory response",NA
+"SRP655816","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP655816",TRUE,FALSE,FALSE,FALSE,"severe cutaneous adverse reaction PBMCs",NA
+"SRP653846","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP653846",TRUE,FALSE,FALSE,FALSE,"CLL autologous PBMC culture bulk RNA-seq",NA
+"SRP652843","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP652843",TRUE,FALSE,FALSE,FALSE,"people living with HIV PBMC bulk RNA-seq",NA
+"SRP652095","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP652095",TRUE,FALSE,FALSE,FALSE,"generic PBMC RNA-seq",NA
+"SRP650028","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP650028",TRUE,FALSE,FALSE,FALSE,"hepatocellular carcinoma PBMC biomarker study",NA
+"SRP628961","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP628961",TRUE,FALSE,FALSE,FALSE,"linezolid neuropathy PBMC RNA-seq",NA
+"SRP627257","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP627257",TRUE,FALSE,FALSE,FALSE,"Sjogren syndrome PBMC bulk RNA-seq",NA
+"SRP625988","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP625988",TRUE,FALSE,FALSE,FALSE,"astronaut PBMC aging",NA
+"SRP621917","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP621917",TRUE,FALSE,FALSE,FALSE,"myasthenia gravis PBMC RNA-seq",NA
+"SRP621915","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP621915",TRUE,FALSE,FALSE,FALSE,"Sjogren and rheumatoid arthritis PBMC RNA-seq",NA
+"SRP621873","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP621873",TRUE,FALSE,FALSE,FALSE,"ischemic stroke PBMC RNA-seq",NA
+"SRP620943","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP620943",TRUE,FALSE,FALSE,FALSE,"coronary artery disease PBMC RNA-seq",NA
+"SRP620097","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP620097",TRUE,FALSE,FALSE,FALSE,"major depressive disorder PBMC RNA-seq",NA
+"SRP608135","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP608135",TRUE,FALSE,FALSE,FALSE,"STING signaling in PBMCs",NA
+"SRP620507","data_sources/sra","data_sources","data/raw/bulk/recount3_pbmc/SRP620507",TRUE,FALSE,FALSE,FALSE,"mononuclear cell aging study lower confidence include",NA
