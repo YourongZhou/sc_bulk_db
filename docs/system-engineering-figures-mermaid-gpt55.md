@@ -253,7 +253,68 @@ flowchart LR
     class Docker,SQL,DataDir data;
 ```
 
-## 6. 数据流图
+## 6. 数据库物理模型图
+
+该图描述当前 PostgreSQL 物理表、主外键、唯一约束、检查约束、统计视图，以及数据库索引记录与外部文件资产之间的对应关系。表达矩阵本体不进入数据库，数据库只保存样本元数据、资产路径和单细胞行级索引。
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"PingFang SC, Microsoft YaHei, sans-serif","primaryColor":"#F8FBFA","primaryTextColor":"#17322D","primaryBorderColor":"#2E6F63","lineColor":"#4C6B64","secondaryColor":"#EEF4F2","tertiaryColor":"#FFF6E5","clusterBkg":"#FBFCFB","clusterBorder":"#9DBDB4"},"flowchart":{"curve":"basis","htmlLabels":true}} }%%
+flowchart LR
+    subgraph PhysicalDB["PostgreSQL 物理库：omics_demo"]
+        direction TB
+
+        subgraph CoreTables["核心物理表"]
+            direction LR
+            PG["<b>population_groups</b><br/>PK group_id INTEGER<br/>UK group_code TEXT<br/>group_name TEXT<br/>min_single_cell_samples INTEGER<br/>min_bulk_samples INTEGER"]
+            S["<b>samples</b><br/>PK sample_id TEXT<br/>UK sample_code TEXT<br/>FK group_id -> population_groups.group_id<br/>subject_id / study_id TEXT<br/>title / description TEXT<br/>species / tissue / condition TEXT<br/>collection_site TEXT<br/>metadata JSON<br/>created_at TIMESTAMP"]
+            A["<b>sample_data_assets</b><br/>PK asset_id INTEGER<br/>FK sample_id -> samples.sample_id ON DELETE CASCADE<br/>UK sample_id + modality<br/>modality TEXT CHECK fastq | single_cell_h5ad | bulk<br/>file_format TEXT CHECK fastq.gz | h5ad | csv | tsv | txt<br/>file_path / file_name TEXT<br/>size_bytes BIGINT<br/>checksum / source_url TEXT<br/>is_active BOOLEAN<br/>metadata JSON<br/>created_at TIMESTAMP"]
+            C["<b>single_cell_cells</b><br/>PK asset_id + obs_index<br/>FK asset_id -> sample_data_assets.asset_id ON DELETE CASCADE<br/>obs_index INTEGER<br/>cell_type / cluster TEXT<br/>sample_barcode TEXT<br/>metadata JSON"]
+        end
+
+        subgraph DerivedViews["统计视图"]
+            direction TB
+            V1["<b>vw_group_modality_counts</b><br/>按人群分组统计 active 资产<br/>single_cell_sample_count<br/>bulk_sample_count<br/>fastq_sample_count"]
+            V2["<b>vw_group_quota_status</b><br/>合并分组配额阈值<br/>single_cell_ok BOOLEAN<br/>bulk_ok BOOLEAN"]
+        end
+    end
+
+    subgraph FileLayer["数据库外部文件层"]
+        direction TB
+        Fastq["FASTQ 文件<br/>原始测序资产"]
+        Bulk["bulk 表达文件<br/>csv / tsv / txt"]
+        H5["h5ad 文件<br/>X 表达矩阵 / obs / var / obsm"]
+    end
+
+    PG ==>|"1:N<br/>samples.group_id"| S
+    S ==>|"1:N<br/>sample_data_assets.sample_id"| A
+    A ==>|"1:N<br/>single_cell_cells.asset_id"| C
+
+    PG -.->|"LEFT JOIN"| V1
+    S -.->|"按 group_id 聚合"| V1
+    A -.->|"按 modality + is_active 计数"| V1
+    PG -.->|"配额阈值"| V2
+    V1 -.->|"覆盖数量"| V2
+
+    A -->|"file_path 指向 fastq.gz"| Fastq
+    A -->|"file_path 指向 bulk 表"| Bulk
+    A -->|"file_path 指向 h5ad"| H5
+    C -->|"obs_index 映射 h5ad obs 行"| H5
+
+    Note["设计边界<br/>PostgreSQL 保存可查询元数据和行索引<br/>表达矩阵、基因名和嵌入坐标保留在源 h5ad 文件中"]
+    C -.->|"懒加载表达数据时使用 asset_id + obs_index"| Note
+    H5 -.->|"由 FastAPI + Scanpy 按需读取"| Note
+
+    classDef table fill:#EAF6F1,stroke:#2E6F63,color:#17322D,stroke-width:1.4px;
+    classDef view fill:#FFF6E5,stroke:#B7791F,color:#3F2C09,stroke-width:1.4px;
+    classDef file fill:#EEF2FF,stroke:#4966A8,color:#1F2D50,stroke-width:1.4px;
+    classDef note fill:#F7EFE6,stroke:#A05A2C,color:#4A2410,stroke-width:1.4px;
+    class PG,S,A,C table;
+    class V1,V2 view;
+    class Fastq,Bulk,H5 file;
+    class Note note;
+```
+
+## 7. 数据流图
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"fontFamily":"PingFang SC, Microsoft YaHei, sans-serif","primaryColor":"#F8FBFA","primaryTextColor":"#17322D","primaryBorderColor":"#2E6F63","lineColor":"#4C6B64","secondaryColor":"#EEF4F2","tertiaryColor":"#FFF6E5"},"flowchart":{"curve":"basis","htmlLabels":true}} }%%
@@ -288,7 +349,7 @@ flowchart TB
     class API,UI app;
 ```
 
-## 7. 业务流程图
+## 8. 业务流程图
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"fontFamily":"PingFang SC, Microsoft YaHei, sans-serif","primaryColor":"#F8FBFA","primaryTextColor":"#17322D","primaryBorderColor":"#2E6F63","lineColor":"#4C6B64","secondaryColor":"#EEF4F2","tertiaryColor":"#FFF6E5","clusterBkg":"#FBFCFB","clusterBorder":"#9DBDB4"},"flowchart":{"curve":"stepAfter","htmlLabels":true}} }%%
@@ -343,7 +404,7 @@ flowchart LR
     class D1,D2,D3,D4,D5 use;
 ```
 
-## 8. 复杂功能时序图
+## 9. 复杂功能时序图
 
 该图描述“打开样本详情并加载嵌入图”的时序，对应 `/samples/{sample_id}` 与 `/samples/{sample_id}/embedding`。
 
@@ -388,7 +449,7 @@ sequenceDiagram
     Note over API,H5: 表达矩阵和嵌入坐标保留在 h5ad 文件中，数据库只保存可检索索引和路径
 ```
 
-## 9. 类图
+## 10. 类图
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"fontFamily":"PingFang SC, Microsoft YaHei, sans-serif","primaryColor":"#F8FBFA","primaryTextColor":"#17322D","primaryBorderColor":"#2E6F63","lineColor":"#4C6B64","secondaryColor":"#EEF4F2","tertiaryColor":"#FFF6E5"}} }%%
@@ -488,4 +549,3 @@ classDiagram
     SingleCellCell --> SingleCellDataResponseDTO : 选择 obs_index
     SampleDataAsset --> EmbeddingResponseDTO : 定位 h5ad 文件
 ```
-
